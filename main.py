@@ -3,6 +3,7 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
+from torch.utils.data import DataLoader
 
 # MNISTの読み込み
 transform = transforms.ToTensor()
@@ -19,6 +20,18 @@ test_dataset = torchvision.datasets.MNIST(
     train=False,
     download=True,
     transform=transform
+)
+
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=64,
+    shuffle=True
+)
+
+test_loader = DataLoader(
+    test_dataset,
+    batch_size=64,
+    shuffle=False
 )
 
 
@@ -44,35 +57,10 @@ class NeuralNetwork(nn.Module):
 
 model = NeuralNetwork()
 
-# 訓練データから画像を1枚取り出す
-image, label = train_dataset[0]
-
-# モデルに画像を入力
-model.eval()
+images, labels = next(iter(train_loader))
 
 with torch.no_grad():
-    output = model(image)
+    output = model(images)
 
-# 結果を表示
-print("入力画像の形状:", image.shape)
-print("モデルの出力形状:", output.shape)
-print("正解ラベル:", label)
-print("モデルの出力:", output)
-
-# 最も大きい値を持つクラスを予測結果とする
-prediction = output.argmax(dim=1).item()
-
-print("予測した数字:", prediction)
-
-# 出力を確率に変換
-probabilities = torch.softmax(output, dim=1)
-
-print("各数字の確率:")
-for i, probability in enumerate(probabilities[0]):
-    print(f"{i}: {probability.item():.4f}")
-
-# 入力画像を表示
-plt.imshow(image.squeeze(), cmap="gray")
-plt.title(f"Correct: {label}, Predicted: {prediction}")
-plt.axis("off")
-plt.show()
+print("入力画像:", images.shape)
+print("モデルの出力:", output.shape)

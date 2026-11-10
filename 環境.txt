@@ -1,0 +1,2 @@
+cd .\handwriting
+.\.venv\Scripts\Activate.ps1

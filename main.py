@@ -1,8 +1,10 @@
 import torch
+import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 
+# MNISTの読み込み
 transform = transforms.ToTensor()
 
 train_dataset = torchvision.datasets.MNIST(
@@ -19,15 +21,27 @@ test_dataset = torchvision.datasets.MNIST(
     transform=transform
 )
 
-print("訓練データ数:", len(train_dataset))
-print("テストデータ数:", len(test_dataset))
 
-image, label = train_dataset[0]
+class NeuralNetwork(nn.Module):
 
-print("画像の形状:", image.shape)
-print("正解ラベル:", label)
+    def __init__(self):
+        super().__init__()
 
-plt.imshow(image.squeeze(), cmap="gray")
-plt.title(f"Label: {label}")
-plt.axis("off")
-plt.show()
+        self.fc1 = nn.Linear(784, 128)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+
+        x = x.view(-1, 784)
+
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+
+        return x
+
+
+model = NeuralNetwork()
+
+print(model)

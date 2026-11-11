@@ -4,6 +4,7 @@ import torchvision
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
+import torch.optim as optim
 
 # MNISTの読み込み
 transform = transforms.ToTensor()
@@ -34,6 +35,7 @@ test_loader = DataLoader(
     shuffle=False
 )
 
+criterion = nn.CrossEntropyLoss()
 
 class NeuralNetwork(nn.Module):
 
@@ -57,10 +59,24 @@ class NeuralNetwork(nn.Module):
 
 model = NeuralNetwork()
 
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+# 64枚の画像を取得
 images, labels = next(iter(train_loader))
 
-with torch.no_grad():
-    output = model(images)
+# モデルの予測
+outputs = model(images)
 
-print("入力画像:", images.shape)
-print("モデルの出力:", output.shape)
+# 損失を計算
+loss = criterion(outputs, labels)
+
+# 勾配を初期化
+optimizer.zero_grad()
+
+# 誤差逆伝播
+loss.backward()
+
+# パラメータを更新
+optimizer.step()
+
+print("損失:", loss.item())

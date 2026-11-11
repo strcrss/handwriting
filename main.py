@@ -61,22 +61,36 @@ model = NeuralNetwork()
 
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# 64枚の画像を取得
-images, labels = next(iter(train_loader))
+# 学習回数
+epochs = 5
 
-# モデルの予測
-outputs = model(images)
+for epoch in range(epochs):
 
-# 損失を計算
-loss = criterion(outputs, labels)
+    total_loss = 0
 
-# 勾配を初期化
-optimizer.zero_grad()
+    for images, labels in train_loader:
 
-# 誤差逆伝播
-loss.backward()
+        # 予測
+        outputs = model(images)
 
-# パラメータを更新
-optimizer.step()
+        # 損失計算
+        loss = criterion(outputs, labels)
 
-print("損失:", loss.item())
+        # 勾配の初期化
+        optimizer.zero_grad()
+
+        # 逆伝播
+        loss.backward()
+
+        # パラメータ更新
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    # 1 epochあたりの平均損失
+    avg_loss = total_loss / len(train_loader)
+
+    print(
+        f"Epoch [{epoch + 1}/{epochs}], "
+        f"Loss: {avg_loss:.4f}"
+    )

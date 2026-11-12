@@ -1,8 +1,38 @@
 import torch
 import torch.nn as nn
+import torch.optim as optim
+import torchvision
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
 
 
+transform = transforms.ToTensor()
 
+train_dataset = torchvision.datasets.MNIST(
+    root="./data",
+    train=True,
+    download=True,
+    transform=transform
+)
+
+test_dataset = torchvision.datasets.MNIST(
+    root="./data",
+    train=False,
+    download=True,
+    transform=transform
+)
+
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=64,
+    shuffle=True
+)
+
+test_loader = DataLoader(
+    test_dataset,
+    batch_size=64,
+    shuffle=False
+)
 
 class CNN(nn.Module):
 
@@ -34,6 +64,61 @@ class CNN(nn.Module):
         x = self.fc2(x)
 
         return x
+
+model = CNN()
+
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+criterion = nn.CrossEntropyLoss()
+
+model.train()
+
+epochs = 5
+
+for epoch in range(epochs):
+
+    total_loss = 0
+
+    for images, labels in train_loader:
+
+        outputs = model(images)
+
+        loss = criterion(outputs, labels)
+
+        optimizer.zero_grad()
+
+        loss.backward()
+
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    ave_loss = total_loss / len(train_loader)
+
+    print(f"Epoch [{epoch + 1}/{epochs}], "
+          f"Loss: {ave_loss:.4f}")
+
+
+model.eval()
+
+correct = 0
+total = 0
+
+with torch.no_grad():
+
+    for images, labels in test_loader:
+
+        outputs = model(images)
+
+        predicted = outputs.argmax(dim=1)
+
+        correct += (predicted == labels).sum().item()
+        total += labels.size(0)
+
+accuracy = 100 * correct / total
+
+print(f"正解率: {accuracy:2f}%")
+
+
 
 
 

@@ -101,6 +101,10 @@ model.eval()
 correct = 0
 total = 0
 
+wrong_images = []
+wrong_labels = []
+wrong_predictions = []
+
 # 勾配計算を無効にする
 with torch.no_grad():
 
@@ -116,6 +120,13 @@ with torch.no_grad():
         correct += (predicted == labels).sum().item()
         total += labels.size(0)
 
+        wrong_indices = (predicted != labels).nonzero().flatten()
+
+        for idx in wrong_indices:
+            wrong_images.append(images[idx])
+            wrong_labels.append(labels[idx].item())
+            wrong_predictions.append(predicted[idx].item())
+
 
 # 正解率を計算
 accuracy = 100 * correct / total
@@ -125,4 +136,21 @@ print(f"正解率: {accuracy:.2f}%")
 params = sum(p.numel() for p in model.parameters())
 print("パラメータ数:", params)
 
+print("誤認識した枚数:", len(wrong_images))
+
+fig, axes = plt.subplots(2, 5, figsize=(10, 5))
+
+for i, ax in enumerate(axes.flat):
+
+    if i < len(wrong_images):
+
+        ax.imshow(wrong_images[i].squeeze(), cmap="gray")
+
+        ax.set_title(f"True: {wrong_labels[i]}\n"
+            f"Pred: {wrong_predictions[i]}")
+
+    ax.axis("off")
+
+plt.tight_layout()
+plt.show()
 

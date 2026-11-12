@@ -118,7 +118,7 @@ accuracy = 100 * correct / total
 
 print(f"正解率: {accuracy:2f}%")
 
-
-
+params = sum(p.numel() for p in model.parameters())
+print("パラメータ数:", params)
 
 

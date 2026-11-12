@@ -6,7 +6,9 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from torchmetrics.classification import MulticlassConfusionMatrix
+import time
 
+torch.manual_seed(1)
 
 transform = transforms.ToTensor()
 
@@ -72,6 +74,8 @@ model = CNN()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
+start_time = time.perf_counter()
+
 model.train()
 
 epochs = 5
@@ -99,6 +103,10 @@ for epoch in range(epochs):
     print(f"Epoch [{epoch + 1}/{epochs}], "
           f"Loss: {ave_loss:.4f}")
 
+end_time = time.perf_counter()
+training_time = end_time - start_time
+
+print(f"学習時間 : {training_time:.2f}秒")
 
 model.eval()
 

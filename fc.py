@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchmetrics.classification import MulticlassConfusionMatrix
+import time
+
+torch.manual_seed(1)
 
 # MNISTの読み込み
 transform = transforms.ToTensor()
@@ -62,7 +65,10 @@ model = NeuralNetwork()
 
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# 学習回数
+start_time = time.perf_counter()
+
+model.train()
+
 epochs = 5
 
 for epoch in range(epochs):
@@ -95,6 +101,11 @@ for epoch in range(epochs):
         f"Epoch [{epoch + 1}/{epochs}], "
         f"Loss: {avg_loss:.4f}"
     )
+
+end_time = time.perf_counter()
+training_time = end_time - start_time
+
+print(f"学習時間 : {training_time:.2f}秒")
 
     # モデルを評価モードにする
 model.eval()

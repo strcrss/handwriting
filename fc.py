@@ -5,6 +5,7 @@ import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 import torch.optim as optim
+from torchmetrics.classification import MulticlassConfusionMatrix
 
 # MNISTの読み込み
 transform = transforms.ToTensor()
@@ -105,6 +106,8 @@ wrong_images = []
 wrong_labels = []
 wrong_predictions = []
 
+metric = MulticlassConfusionMatrix(num_classes=10)
+
 # 勾配計算を無効にする
 with torch.no_grad():
 
@@ -126,6 +129,8 @@ with torch.no_grad():
             wrong_images.append(images[idx])
             wrong_labels.append(labels[idx].item())
             wrong_predictions.append(predicted[idx].item())
+
+        metric.update(outputs, labels)
 
 
 # 正解率を計算
@@ -152,5 +157,23 @@ for i, ax in enumerate(axes.flat):
     ax.axis("off")
 
 plt.tight_layout()
+plt.show()
+
+cm = metric.compute()
+print(cm)
+
+plt.imshow(cm)
+plt.colorbar()
+
+for i in range(10):
+    for j in range(10):
+        plt.text(j, i, int(cm[i, j]),
+                 ha="center", va="center")
+
+plt.xticks(range(10))
+plt.yticks(range(10))
+plt.xlabel("Predicted label")
+plt.ylabel("True label")
+plt.title("Confusion Matrix")
 plt.show()
 

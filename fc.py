@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchmetrics.classification import MulticlassConfusionMatrix
 import time
+import os
+import pandas as pd
 
 torch.manual_seed(1)
 
@@ -187,4 +189,25 @@ plt.xlabel("Predicted label")
 plt.ylabel("True label")
 plt.title("Confusion Matrix")
 plt.show()
+
+
+#csvに結果を保存
+os.makedirs("results", exist_ok=True)
+
+new_result = pd.DataFrame({
+    "Models" : ["FC"],
+    "Accuracy" : [accuracy],
+    "Training Time" : [training_time],
+    "Parameters" : [params]
+})
+
+csv_path = "results/comparison.csv"
+
+if os.path.exists(csv_path):
+    old_results = pd.read_csv(csv_path)
+    results = pd.concat([old_results, new_result], ignore_index=True)
+else:
+    results = new_result
+
+results.to_csv(csv_path, index=False)
 

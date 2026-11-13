@@ -190,7 +190,7 @@ plt.show()
 os.makedirs("results", exist_ok=True)
 
 new_result = pd.DataFrame({
-    "Models" : ["CNN"],
+    "Model" : ["CNN"],
     "Accuracy" : [accuracy],
     "Training Time" : [training_time],
     "Parameters" : [params]

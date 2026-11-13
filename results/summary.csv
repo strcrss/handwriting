@@ -1,0 +1,5 @@
+,Accuracy,Accuracy,Training Time,Training Time,Parameters
+,mean,std,mean,std,mean
+Model,,,,,
+CNN,98.96,0.0,130.89423734000303,63.28628180559117,421642.0
+FC,97.22,0.0,36.263380399998276,13.426620285676488,101770.0

@@ -33,16 +33,22 @@ test_dataset = torchvision.datasets.MNIST(
 train_size = int(len(train_dataset) * 0.9)
 val_size = len(train_dataset) - train_size
 
-train_subnet, val_subnet = random_split(
+train_subset, val_subset = random_split(
     train_dataset,
     [train_size, val_size],
     generator = torch.Generator().manual_seed(1)
 )
 
 train_loader = DataLoader(
-    train_dataset,
+    train_subset,
     batch_size=64,
     shuffle=True
+)
+
+train_val_loader = DataLoader(
+    train_subset,
+    batch_size=64,
+    shuffle=False
 )
 
 test_loader = DataLoader(
@@ -52,9 +58,9 @@ test_loader = DataLoader(
 )
 
 val_loader = DataLoader(
-    val_subnet,
+    val_subset,
     batch_size=64,
-    shuffle = True
+    shuffle = False
 )
 
 class CNN(nn.Module):
@@ -93,7 +99,7 @@ model = CNN()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
-start_time = time.perf_counter()
+training_time = 0
 
 epochs = 5
 
@@ -102,13 +108,12 @@ train_accuracy_history = []
 val_loss_history = []
 val_accuracy_history = []
 
+history = []
+
 for epoch in range(epochs):
 
     model.train()
-
-    train_total_loss = 0
-    train_correct = 0
-    train_total = 0
+    start_time = time.perf_counter()
 
     for images, labels in train_loader:
 
@@ -122,17 +127,31 @@ for epoch in range(epochs):
 
         optimizer.step()
 
-        train_total_loss += loss.item()
-        predicted = outputs.argmax(dim=1)
-        train_correct += (predicted == labels).sum().item()
-        train_total += labels.size(0)
+    end_time = time.perf_counter()
+    training_time += end_time - start_time
 
-    avg_loss =  train_total_loss / len(train_loader)
+
+    model.eval()
+
+    train_total_loss = 0
+    train_correct = 0
+    train_total = 0
+
+    with torch.no_grad():
+        for images,labels in train_val_loader:
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+
+            train_total_loss += loss.item() * labels.size(0)
+            predicted = outputs.argmax(dim=1)
+            train_correct += (predicted == labels).sum().item()
+            train_total += labels.size(0)
+
+    avg_loss =  train_total_loss / train_total
     accuracy = 100 * train_correct / train_total
     train_accuracy_history.append(accuracy)
     train_loss_history.append(avg_loss)
 
-    model.eval()
 
     val_total_loss = 0
     val_correct = 0
@@ -143,13 +162,13 @@ for epoch in range(epochs):
             outputs = model(images)
             loss = criterion(outputs, labels)
 
-            val_total_loss += loss.item()
+            val_total_loss += loss.item() * labels.size(0)
 
             predicted = outputs.argmax(dim=1)
             val_correct += (predicted == labels).sum().item()
             val_total += labels.size(0)
 
-    val_avg_loss = val_total_loss / len(val_loader)
+    val_avg_loss = val_total_loss / val_total
     val_accuracy = 100 * val_correct / val_total
 
     val_loss_history.append(val_avg_loss)
@@ -158,18 +177,22 @@ for epoch in range(epochs):
 
     print(
         f"Epoch [{epoch + 1}/{epochs}], "
-        f"Loss: {avg_loss:.4f}"
-        f"Train Accuracy: {accuracy:.2f}%,"
-        f"Val Loss: {val_avg_loss:4f},"
+        f"Loss: {avg_loss:.4f}, "
+        f"Train Accuracy: {accuracy:.2f}%, "
+        f"Val Loss: {val_avg_loss:4f}, "
         f"Val Accuracy: {val_accuracy:.2f}%"
     )
 
-end_time = time.perf_counter()
-training_time = end_time - start_time
+    history.append({
+        "Epoch": epoch + 1,
+        "Train Loss": avg_loss,
+        "Train Accuracy": accuracy,
+        "Val Loss": val_avg_loss,
+        "Val Accuracy": val_accuracy
+    })
 
 print(f"学習時間 : {training_time:.2f}秒")
 
-model.eval()
 
 test_correct = 0
 test_total = 0
@@ -266,16 +289,25 @@ else:
 results.to_csv(csv_path, index=False)
 
 
-plt.plot(range(1, epochs+1), train_loss_history, marker = "o")
+plt.plot(range(1, epochs+1), train_loss_history, marker = "o", label = "Train")
+plt.plot(range(1, epochs+1), val_loss_history, marker = "o", label = "Validation")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
-plt.title("Training Loss")
+plt.title("CNN: Training and Validation Loss")
+plt.legend()
 plt.savefig("results/cnn_loss.png")
 plt.show()
 
-plt.plot(range(1, epochs+1), train_loss_history, marker = "o")
+plt.plot(range(1, epochs+1), train_accuracy_history, marker = "o", label = "Train")
+plt.plot(range(1, epochs+1), val_accuracy_history, marker = "o", label = "Validation")
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy (%)")
-plt.title("Training and Validation Accuracy")
+plt.title("CNN: Training and Validation Accuracy")
+plt.legend()
 plt.savefig("results/cnn_accuracy.png")
 plt.show()
+
+history_df = pd.DataFrame(history)
+
+os.makedirs("results", exist_ok=True)
+history_df.to_csv("results/cnn_history.csv", index=False)

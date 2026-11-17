@@ -36,7 +36,7 @@ def preprocess_image(image):
     return transforms.ToTensor()(new_image)
          
 
-def predict_degit(image, model):
+def predict_digit(image, model):
     image = preprocess_image(image)
 
     with torch.no_grad():
@@ -53,7 +53,7 @@ def main():
     image = Image.open("8.png").convert("L")
     model = load_model()
 
-    prediction, confidence = predict_degit(image, model)
+    prediction, confidence = predict_digit(image, model)
 
     print("予測した数字:", prediction)
     print("確信度:", confidence)

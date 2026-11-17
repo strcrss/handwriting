@@ -5,15 +5,18 @@ from cnn import CNN
 import matplotlib.pyplot as plt
 
 
-model = CNN()
-model.load_state_dict(
-    torch.load(
-        "results/cnn_model.pth",
-        map_location="cpu",
-        weights_only=True
+def load_model(model_path = "results/cnn.pth"):
+    model = CNN()
+    model.load_state_dict(
+        torch.load(
+            "results/cnn_model.pth",
+            map_location="cpu",
+            weights_only=True
+        )
     )
-)
-model.eval()
+    model.eval()
+
+    return model
 
 def preprocess_image(image):
     image = Image.eval(image, lambda x: 255 - x)
@@ -28,27 +31,33 @@ def preprocess_image(image):
     x = (28 - image.width)//2
     y = (28 - image.height)//2
     new_image.paste(image, (x, y))
-    new_image = Image.eval(new_image, lambda x: min(255, x * 5))
+    new_image = Image.eval(new_image, lambda x: min(255, x * 2))
 
     return transforms.ToTensor()(new_image)
          
 
+def predict_degit(image, model):
+    image = preprocess_image(image)
 
-image = Image.open("4.png").convert("L")
-image = preprocess_image(image)
+    with torch.no_grad():
+        outputs = model(image.unsqueeze(0))
+        probabilities = torch.softmax(outputs, dim = 1)
+        prediction = outputs.argmax(dim=1). item()
 
-plt.imshow(image.squeeze(), cmap = "gray")
-plt.show()
+    confidence = probabilities[0, prediction].item() * 100
 
-with torch.no_grad():
-    outputs = model(image.unsqueeze(0))
-    probabilities = torch.softmax(outputs, dim = 1)
-    prediction = outputs.argmax(dim=1). item()
-
-print("予測した数字:", prediction)
-print("確信度:", f"{probabilities[0, prediction].item() * 100:.2f}%")
+    return prediction, confidence
 
 
+def main():
+    image = Image.open("8.png").convert("L")
+    model = load_model()
+
+    prediction, confidence = predict_degit(image, model)
+
+    print("予測した数字:", prediction)
+    print("確信度:", confidence)
 
 
-
+if __name__ =="__main__":
+    main()

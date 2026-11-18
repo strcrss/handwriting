@@ -7,7 +7,7 @@ class DigitApp:
     def __init__(self, root):
         self.root = root
         self.root.title("手書き数字識別")
-        self.root.geometry("400x500")
+        self.root.geometry("400x540")
 
         self.model = load_model()
 
@@ -98,9 +98,15 @@ class DigitApp:
         try:
             image = self.get_image()
             prediction, confidence = predict_digit(image, self.model)
-            self.result_label.config(
-                text=f"予測: {prediction}   確信度: {confidence:.2f}%"
-            )
+
+            result = "認識結果\n"
+
+            for i in range(3):
+                result += (
+                    f"第{i+1}候補: {prediction[i]}"
+                    f"({confidence[i]:.2f}%)\n"
+                )
+            self.result_label.config(text=result)
 
         except ValueError as e:
             self.result_label.config(text=str(e))

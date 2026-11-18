@@ -1,13 +1,21 @@
 import tkinter as tk
 from PIL import Image, ImageDraw
 from predict import load_model, predict_digit
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 class DigitApp:
     def __init__(self, root):
         self.root = root
         self.root.title("手書き数字識別")
-        self.root.geometry("400x540")
+        self.root.geometry("800x400")
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(padx=10, pady=10)
+        left_frame = tk.Frame(main_frame)
+        left_frame.pack(side=tk.LEFT, padx=10)
+        right_frame = tk.Frame(main_frame)
+        right_frame.pack(side=tk.RIGHT, padx=10)
 
         self.model = load_model()
 
@@ -15,7 +23,7 @@ class DigitApp:
         self.current_stroke = None
 
         self.canvas = tk.Canvas(
-            root,
+            left_frame,
             width=280,
             height=280,
             bg="black",
@@ -27,25 +35,39 @@ class DigitApp:
         self.canvas.bind("<B1-Motion>", self.draw)
 
         predict_button = tk.Button(
-            root,
+            left_frame,
             text="認識",
             command=self.predict
         )
         predict_button.pack(pady=5)
 
         clear_button = tk.Button(
-            root,
+            left_frame,
             text="消去",
             command=self.clear
         )
         clear_button.pack()
 
         self.result_label = tk.Label(
-            root,
+            right_frame,
             text="ここに認識結果が表示されます",
             font=("Arial", 14)
         )
         self.result_label.pack(pady=10)
+        self.figure = Figure(figsize=(4.5, 2.5), dpi = 100)
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_title("Prediction Probabilities")
+        self.ax.set_xlabel("Digit")
+        self.ax.set_ylabel("Probability (%)")
+        self.ax.set_xticks(range(10))
+        self.ax.set_ylim(0, 100)
+        self.graph_canvas = FigureCanvasTkAgg(
+            self.figure,
+            master=right_frame
+        )
+        self.graph_canvas.get_tk_widget().pack(pady=10)
+        self.graph_canvas.draw()
+
 
 
     def start_stroke(self, event):
@@ -97,16 +119,32 @@ class DigitApp:
     def predict(self):
         try:
             image = self.get_image()
-            prediction, confidence = predict_digit(image, self.model)
+            confidences = predict_digit(image, self.model)
+
+            top3 = sorted(
+                enumerate(confidences),
+                key=lambda x: x[1],
+                reverse=True
+            )[:3]
 
             result = "認識結果\n"
 
-            for i in range(3):
+            for i, (digit, confidence) in enumerate(top3):
                 result += (
-                    f"第{i+1}候補: {prediction[i]}"
-                    f"({confidence[i]:.2f}%)\n"
+                    f"第{i+1}候補: {digit}"
+                    f"({confidence:.2f}%)\n"
                 )
             self.result_label.config(text=result)
+
+            self.ax.clear()
+            self.ax.bar(range(10), confidences)
+            self.ax.set_title("Prediction Probabilities")
+            self.ax.set_xlabel("Digit")
+            self.ax.set_ylabel("Probability (%)")
+            self.ax.set_xticks(range(10))
+            self.ax.set_ylim(0, 100)
+            self.figure.tight_layout()
+            self.graph_canvas.draw()
 
         except ValueError as e:
             self.result_label.config(text=str(e))

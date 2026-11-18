@@ -42,16 +42,10 @@ def predict_digit(image, model):
     with torch.no_grad():
         outputs = model(image.unsqueeze(0))
         probabilities = torch.softmax(outputs, dim = 1)
-        top_probabilities, top_indices = torch.topk(
-            probabilities,
-            k=3,
-            dim=1
-        )
 
-    prediction = top_indices[0].tolist()
-    confidence = (top_probabilities[0]*100).tolist()
+    confidence = (probabilities[0]*100).tolist()
 
-    return prediction, confidence
+    return confidence
 
 
 def main():

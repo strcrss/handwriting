@@ -156,7 +156,14 @@ class DigitApp:
         self.result_label.config(
             text="ここに認識結果が表示されます"
         )
-
+        self.ax.clear()
+        self.ax.set_title("Prediction Probabilities")
+        self.ax.set_xlabel("Digit")
+        self.ax.set_ylabel("Probabiliti (%)")
+        self.ax.set_xticks(range(10))
+        self.ax.set_ylim(0, 100)
+        self.figure.tight_layout()
+        self.graph_canvas.draw()
 
 
 if __name__ == "__main__":

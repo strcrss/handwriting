@@ -105,7 +105,7 @@ def main():
 
     training_time = 0
 
-    epochs = 5
+    epochs = 20
 
     train_loss_history = []
     train_accuracy_history = []

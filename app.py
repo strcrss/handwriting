@@ -171,6 +171,3 @@ if __name__ == "__main__":
     app = DigitApp(root)
     root.mainloop()
 
-
-
-
